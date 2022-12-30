@@ -1,31 +1,37 @@
 extends KinematicBody2D
 
-const MAX_SPEED = 100
-const ACCELERATION = 500
-const FRICTION = 500
+export var moveSpeed : float = 100;
+
+export var facingDirection : Vector2 = Vector2(0, 0)
+
+onready var animationTree = $AnimationTree
+onready var stateMachine = animationTree.get("parameters/playback")
 
 var velocity = Vector2.ZERO
 
 func _ready():
-	var class_data = load("res://Player/player_stats.tres")	
-	var playerHealth = class_data.health
-	var playerAttack = class_data.attack
-	var playerDefense = class_data.defense
-	
-	print("player health: ", playerHealth)
-	print("player attack: ", playerAttack)
-	print("player defense: ", playerDefense)
+	updateAnimation(facingDirection)
 
 func _physics_process(delta):
-	var input_vector = Vector2.ZERO
-	input_vector.x = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
-	input_vector.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
-	input_vector = input_vector.normalized()
 	
-	if input_vector != Vector2.ZERO:
-		velocity = velocity.move_toward(input_vector * MAX_SPEED, ACCELERATION * delta) 
-	else:
-		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
+	var inputVector = Vector2(
+		Input.get_action_strength("right") - Input.get_action_strength("left"),
+		Input.get_action_strength("down") - Input.get_action_strength("up")
+	)
 
-	velocity = move_and_slide(velocity)
+	velocity = inputVector.normalized() * moveSpeed;
 	
+	updateAnimation(inputVector)
+	pickNewState()
+	move_and_slide(velocity)
+
+func updateAnimation(moveInput : Vector2):
+	if(moveInput != Vector2.ZERO):
+		animationTree.set("parameters/Idle/blend_position", moveInput)
+		animationTree.set("parameters/Run/blend_position", moveInput)
+
+func pickNewState():
+	if(velocity != Vector2.ZERO):
+		stateMachine.travel("Run")
+	else:
+		stateMachine.travel("Idle")
