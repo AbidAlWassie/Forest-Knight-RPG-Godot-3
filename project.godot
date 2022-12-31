@@ -10,7 +10,7 @@ config_version=4
 
 [application]
 
-config/name="Godot- Rpg"
+config/name="Forest Knight"
 run/main_scene="res://World.tscn"
 config/icon="res://icon.png"
 
